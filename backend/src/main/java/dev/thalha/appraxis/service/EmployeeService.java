@@ -145,20 +145,18 @@ public class EmployeeService {
                     .toList();
 
             for (PmRating rating : ratings) {
-                if (rating.getComment() != null && !rating.getComment().isEmpty()) {
-                    String clarification = clarificationRepository.findByPmRating(rating)
-                            .map(Clarification::getEmployeeReply)
-                            .orElse(null);
+                String clarification = clarificationRepository.findByPmRating(rating)
+                        .map(Clarification::getEmployeeReply)
+                        .orElse(null);
 
-                    feedbacks.add(new FeedbackViewDto(
-                            rating.getId(),
-                            rating.getQuestion().getText(),
-                            review.getReviewer().getName(),
-                            rating.getRating(),
-                            rating.getComment(),
-                            clarification
-                    ));
-                }
+                feedbacks.add(new FeedbackViewDto(
+                        rating.getId(),
+                        rating.getQuestion().getText(),
+                        review.getReviewer().getName(),
+                        rating.getRating(),
+                        rating.getComment() != null ? rating.getComment() : "",
+                        clarification
+                ));
             }
         }
         return feedbacks;

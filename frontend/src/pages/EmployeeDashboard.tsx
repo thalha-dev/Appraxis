@@ -415,10 +415,16 @@ export default function EmployeeDashboard() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="space-y-4 pt-4 px-1">
-                                    <div className="bg-muted p-4 rounded-md">
-                                        <p className="text-sm font-semibold mb-1">Manager's Comment:</p>
-                                        <p className="italic text-muted-foreground">"{item.comment}"</p>
-                                    </div>
+                                    {item.comment ? (
+                                        <div className="bg-muted p-4 rounded-md">
+                                            <p className="text-sm font-semibold mb-1">Manager's Comment:</p>
+                                            <p className="italic text-muted-foreground">"{item.comment}"</p>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-muted p-4 rounded-md">
+                                            <p className="text-sm text-muted-foreground">No comment provided by manager.</p>
+                                        </div>
+                                    )}
                                     
                                     {item.existingClarification ? (
                                         <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md border border-blue-100 dark:border-blue-900">

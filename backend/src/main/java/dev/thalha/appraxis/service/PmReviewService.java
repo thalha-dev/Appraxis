@@ -1,15 +1,14 @@
 package dev.thalha.appraxis.service;
 
+import dev.thalha.appraxis.dto.FeedbackViewDto;
 import dev.thalha.appraxis.dto.PmRatingDto;
 import dev.thalha.appraxis.model.*;
-import dev.thalha.appraxis.repository.AppraisalRepository;
-import dev.thalha.appraxis.repository.PmRatingRepository;
-import dev.thalha.appraxis.repository.PmReviewRepository;
-import dev.thalha.appraxis.repository.QuestionRepository;
+import dev.thalha.appraxis.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,17 +18,52 @@ public class PmReviewService {
     private final PmRatingRepository pmRatingRepository;
     private final QuestionRepository questionRepository;
     private final AppraisalRepository appraisalRepository;
+    private final ClarificationRepository clarificationRepository;
 
     public PmReviewService(PmReviewRepository pmReviewRepository, PmRatingRepository pmRatingRepository, 
-                           QuestionRepository questionRepository, AppraisalRepository appraisalRepository) {
+                           QuestionRepository questionRepository, AppraisalRepository appraisalRepository,
+                           ClarificationRepository clarificationRepository) {
         this.pmReviewRepository = pmReviewRepository;
         this.pmRatingRepository = pmRatingRepository;
         this.questionRepository = questionRepository;
         this.appraisalRepository = appraisalRepository;
+        this.clarificationRepository = clarificationRepository;
     }
 
     public List<PmReview> getPendingReviews(User reviewer) {
         return pmReviewRepository.findByReviewerAndStatus(reviewer, ReviewStatus.PENDING);
+    }
+
+    public List<PmReview> getSubmittedReviews(User reviewer) {
+        return pmReviewRepository.findByReviewerAndStatus(reviewer, ReviewStatus.SUBMITTED);
+    }
+
+    public List<FeedbackViewDto> getReviewWithClarifications(Long reviewId) {
+        PmReview review = pmReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
+
+        List<PmRating> ratings = pmRatingRepository.findAll().stream()
+                .filter(r -> r.getPmReview().getId().equals(reviewId))
+                .toList();
+
+        List<FeedbackViewDto> feedbacks = new ArrayList<>();
+
+        for (PmRating rating : ratings) {
+            String clarification = clarificationRepository.findByPmRating(rating)
+                    .map(Clarification::getEmployeeReply)
+                    .orElse(null);
+
+            feedbacks.add(new FeedbackViewDto(
+                    rating.getId(),
+                    rating.getQuestion().getText(),
+                    review.getReviewer().getName(),
+                    rating.getRating(),
+                    rating.getComment() != null ? rating.getComment() : "",
+                    clarification
+            ));
+        }
+
+        return feedbacks;
     }
 
     public List<Question> getActiveQuestions() {
