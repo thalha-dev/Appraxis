@@ -10,7 +10,7 @@ export function MainLayout() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
       <header className="border-b h-16 flex items-center justify-between px-6 bg-card">
-        <h1 className="text-xl font-bold">CAPS</h1>
+        <h1 className="text-xl font-bold">Appraxis</h1>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">

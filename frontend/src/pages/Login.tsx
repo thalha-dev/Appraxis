@@ -72,7 +72,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4">
       <Card className="w-full max-w-md shadow-lg border-0/50">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">Login to CAPS</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">Login to Appraxis</CardTitle>
           <CardDescription>
             Enter your credentials to access the appraisal system
           </CardDescription>
