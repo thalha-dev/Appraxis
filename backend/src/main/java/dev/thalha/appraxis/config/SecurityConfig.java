@@ -67,7 +67,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/employees").hasRole("HR")
                         .requestMatchers("/api/users/pms").hasRole("HR")
                         .requestMatchers("/api/pm/**").hasRole("PROJECT_MANAGER")
-                        .requestMatchers("/api/questions").hasRole("PROJECT_MANAGER")
+                        .requestMatchers("/api/questions").hasAnyRole("PROJECT_MANAGER", "EMPLOYEE")
+                        .requestMatchers("/api/employee/**").hasRole("EMPLOYEE")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

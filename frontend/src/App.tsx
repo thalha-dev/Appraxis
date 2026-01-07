@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import HrDashboard from './pages/HrDashboard';
 import PmDashboard from './pages/PmDashboard';
 import ReviewForm from './pages/ReviewForm';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Route path="/hr-dashboard" element={<HrDashboard />} />
               <Route path="/pm-dashboard" element={<PmDashboard />} />
               <Route path="/pm/reviews/:reviewId" element={<ReviewForm />} />
+              <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
             </Route>
           </Route>
         </Routes>
