@@ -26,7 +26,10 @@ public class AppraisalService {
     }
 
     public List<User> getAllEmployees() {
-        return userRepository.findByRole(Role.EMPLOYEE);
+        // Get all users with EMPLOYEE role, but exclude those who also have BOSS role
+        return userRepository.findByRole(Role.EMPLOYEE).stream()
+                .filter(user -> !user.hasRole(Role.BOSS))
+                .toList();
     }
     
     public List<User> getAllPms() {
@@ -41,7 +44,7 @@ public class AppraisalService {
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        if (employee.getRole() != Role.EMPLOYEE) {
+        if (!employee.hasRole(Role.EMPLOYEE)) {
             throw new RuntimeException("Can only initiate appraisal for employees");
         }
 
@@ -72,7 +75,7 @@ public class AppraisalService {
         User pm = userRepository.findById(pmId)
                 .orElseThrow(() -> new RuntimeException("PM not found"));
                 
-        if (pm.getRole() != Role.PROJECT_MANAGER) {
+        if (!pm.hasRole(Role.PROJECT_MANAGER)) {
             throw new RuntimeException("Selected user is not a Project Manager");
         }
         

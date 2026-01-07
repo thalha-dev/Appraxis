@@ -291,12 +291,17 @@ self_assessments                     pm_reviews ◄─────────�
 
 ## 9. Test Credentials
 
-| Username | Password | Role | Display Name |
-|----------|----------|------|--------------|
-| hr_admin | password | HR | HR Administrator |
-| john_doe | password | EMPLOYEE | John Doe |
-| jane_pm | password | PROJECT_MANAGER | Jane Project Manager |
-| big_boss | password | BOSS | Big Boss |
+| Username | Password | Name | Roles | Designation |
+|----------|----------|------|-------|-------------|
+| john.doe | password | John Doe | EMPLOYEE | Software Engineer |
+| sarah.wilson | password | Sarah Wilson | EMPLOYEE | Frontend Developer |
+| mike.chen | password | Mike Chen | EMPLOYEE | Backend Developer |
+| emily.davis | password | Emily Davis | EMPLOYEE | QA Engineer |
+| alex.kumar | password | Alex Kumar | EMPLOYEE | DevOps Engineer |
+| jane.smith | password | Jane Smith | EMPLOYEE, PROJECT_MANAGER | Senior Project Manager |
+| david.brown | password | David Brown | EMPLOYEE, PROJECT_MANAGER | Technical Lead |
+| lisa.johnson | password | Lisa Johnson | EMPLOYEE, HR | HR Manager |
+| robert.taylor | password | Robert Taylor | EMPLOYEE, BOSS | CEO |
 
 ---
 

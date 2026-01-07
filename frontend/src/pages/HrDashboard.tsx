@@ -171,7 +171,7 @@ export default function HrDashboard() {
                       <SelectContent>
                         {employees.map(emp => (
                           <SelectItem key={emp.id} value={emp.id.toString()}>
-                            {emp.name} ({emp.username})
+                            {emp.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

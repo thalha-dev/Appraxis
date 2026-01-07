@@ -38,7 +38,7 @@ public class AuthController {
         return ResponseEntity.ok(AuthResponse.builder()
                 .token(jwtToken)
                 .name(user.getName())
-                .role(user.getRole())
+                .roles(user.getRoles())
                 .message("Login successful")
                 .build());
     }

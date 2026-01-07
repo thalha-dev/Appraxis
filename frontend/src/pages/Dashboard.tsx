@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,17 +23,26 @@ interface AppraisalCycle {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const navigate = useNavigate();
   const [appraisals, setAppraisals] = useState<AppraisalCycle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.role === 'HR') {
+    // Redirect users to their appropriate dashboard based on role priority
+    // HR stays here (shows stats), others get redirected
+    if (hasRole('HR')) {
       fetchAppraisals();
+    } else if (hasRole('BOSS')) {
+      navigate('/boss-dashboard', { replace: true });
+    } else if (hasRole('PROJECT_MANAGER')) {
+      navigate('/pm-dashboard', { replace: true });
+    } else if (hasRole('EMPLOYEE')) {
+      navigate('/employee-dashboard', { replace: true });
     } else {
       setLoading(false);
     }
-  }, [user?.role]);
+  }, [navigate]);
 
   const fetchAppraisals = async () => {
     try {
@@ -67,7 +77,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Welcome back, {user?.name}</p>
       </div>
 
-      {user?.role === 'HR' && (
+      {hasRole('HR') && (
         <>
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -162,15 +172,17 @@ export default function Dashboard() {
         </>
       )}
 
-      {user?.role !== 'HR' && (
+      {!hasRole('HR') && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Your Role</CardTitle>
+            <CardTitle className="text-sm font-medium">Your Roles</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user?.role?.replace(/_/g, ' ')}</div>
+            <div className="text-2xl font-bold">
+              {user?.roles?.map(r => r.replace(/_/g, ' ')).join(', ')}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Use the sidebar to navigate to your dashboard
+              Use the sidebar to navigate to your dashboards
             </p>
           </CardContent>
         </Card>

@@ -47,9 +47,9 @@ export default function Login() {
     setLoading(true);
     try {
       const response = await api.post('/auth/login', values);
-      const { token, name, role } = response.data;
+      const { token, name, roles } = response.data;
       
-      login(token, { name, role });
+      login(token, { name, roles });
       
       toast({
         title: "Login Successful",

@@ -3,6 +3,8 @@ package dev.thalha.appraxis;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.Set;
+
 @SpringBootApplication
 public class AppraxisApplication {
 
@@ -17,44 +19,110 @@ public class AppraxisApplication {
 	) {
 		return args -> {
 			if (userRepository.count() == 0) {
-				var hrAdmin = dev.thalha.appraxis.model.User.builder()
-						.username("hr_admin")
-						.password(passwordEncoder.encode("password"))
-						.name("HR Administrator")
-						.email("hr@appraxis.dev")
-						.role(dev.thalha.appraxis.model.Role.HR)
-						.designation("Head of HR")
-						.build();
-
-				var employee = dev.thalha.appraxis.model.User.builder()
-						.username("john_doe")
+				// ========== Regular Employees (5) ==========
+				var emp1 = dev.thalha.appraxis.model.User.builder()
+						.username("john.doe")
 						.password(passwordEncoder.encode("password"))
 						.name("John Doe")
-						.email("john@appraxis.dev")
-						.role(dev.thalha.appraxis.model.Role.EMPLOYEE)
+						.email("john.doe@company.com")
+						.roles(Set.of(dev.thalha.appraxis.model.Role.EMPLOYEE))
 						.designation("Software Engineer")
 						.build();
 
-				var pm = dev.thalha.appraxis.model.User.builder()
-						.username("jane_pm")
+				var emp2 = dev.thalha.appraxis.model.User.builder()
+						.username("sarah.wilson")
 						.password(passwordEncoder.encode("password"))
-						.name("Jane Project Manager")
-						.email("jane@appraxis.dev")
-						.role(dev.thalha.appraxis.model.Role.PROJECT_MANAGER)
-						.designation("Senior PM")
+						.name("Sarah Wilson")
+						.email("sarah.wilson@company.com")
+						.roles(Set.of(dev.thalha.appraxis.model.Role.EMPLOYEE))
+						.designation("Frontend Developer")
 						.build();
 
-				var boss = dev.thalha.appraxis.model.User.builder()
-						.username("big_boss")
+				var emp3 = dev.thalha.appraxis.model.User.builder()
+						.username("mike.chen")
 						.password(passwordEncoder.encode("password"))
-						.name("Big Boss")
-						.email("boss@appraxis.dev")
-						.role(dev.thalha.appraxis.model.Role.BOSS)
+						.name("Mike Chen")
+						.email("mike.chen@company.com")
+						.roles(Set.of(dev.thalha.appraxis.model.Role.EMPLOYEE))
+						.designation("Backend Developer")
+						.build();
+
+				var emp4 = dev.thalha.appraxis.model.User.builder()
+						.username("emily.davis")
+						.password(passwordEncoder.encode("password"))
+						.name("Emily Davis")
+						.email("emily.davis@company.com")
+						.roles(Set.of(dev.thalha.appraxis.model.Role.EMPLOYEE))
+						.designation("QA Engineer")
+						.build();
+
+				var emp5 = dev.thalha.appraxis.model.User.builder()
+						.username("alex.kumar")
+						.password(passwordEncoder.encode("password"))
+						.name("Alex Kumar")
+						.email("alex.kumar@company.com")
+						.roles(Set.of(dev.thalha.appraxis.model.Role.EMPLOYEE))
+						.designation("DevOps Engineer")
+						.build();
+
+				// ========== Project Managers (2) - also employees ==========
+				var pm1 = dev.thalha.appraxis.model.User.builder()
+						.username("jane.smith")
+						.password(passwordEncoder.encode("password"))
+						.name("Jane Smith")
+						.email("jane.smith@company.com")
+						.roles(Set.of(
+							dev.thalha.appraxis.model.Role.EMPLOYEE,
+							dev.thalha.appraxis.model.Role.PROJECT_MANAGER
+						))
+						.designation("Senior Project Manager")
+						.build();
+
+				var pm2 = dev.thalha.appraxis.model.User.builder()
+						.username("david.brown")
+						.password(passwordEncoder.encode("password"))
+						.name("David Brown")
+						.email("david.brown@company.com")
+						.roles(Set.of(
+							dev.thalha.appraxis.model.Role.EMPLOYEE,
+							dev.thalha.appraxis.model.Role.PROJECT_MANAGER
+						))
+						.designation("Technical Lead")
+						.build();
+
+				// ========== HR (1) - also an employee ==========
+				var hr = dev.thalha.appraxis.model.User.builder()
+						.username("lisa.johnson")
+						.password(passwordEncoder.encode("password"))
+						.name("Lisa Johnson")
+						.email("lisa.johnson@company.com")
+						.roles(Set.of(
+							dev.thalha.appraxis.model.Role.EMPLOYEE,
+							dev.thalha.appraxis.model.Role.HR
+						))
+						.designation("HR Manager")
+						.build();
+
+				// ========== Boss (1) - NOT in employee appraisals ==========
+				var boss = dev.thalha.appraxis.model.User.builder()
+						.username("robert.taylor")
+						.password(passwordEncoder.encode("password"))
+						.name("Robert Taylor")
+						.email("robert.taylor@company.com")
+						.roles(Set.of(
+							dev.thalha.appraxis.model.Role.EMPLOYEE,
+							dev.thalha.appraxis.model.Role.BOSS
+						))
 						.designation("CEO")
 						.build();
 
-				userRepository.saveAll(java.util.List.of(hrAdmin, employee, pm, boss));
-				System.out.println("Data seeding completed.");
+				userRepository.saveAll(java.util.List.of(
+					emp1, emp2, emp3, emp4, emp5,
+					pm1, pm2,
+					hr,
+					boss
+				));
+				System.out.println("Data seeding completed - 9 users created.");
 			}
 		};
 	}

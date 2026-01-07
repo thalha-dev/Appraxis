@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Outlet, Link } from 'react-router-dom';
 
 export function MainLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
+
+  // Get display role - show the "highest" additional role, or EMPLOYEE if no additional roles
+  const getDisplayRole = () => {
+    if (hasRole('BOSS')) return 'BOSS';
+    if (hasRole('HR')) return 'HR';
+    if (hasRole('PROJECT_MANAGER')) return 'PROJECT_MANAGER';
+    return 'EMPLOYEE';
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -18,7 +26,7 @@ export function MainLayout() {
             </div>
             <div className="text-sm">
               <p className="font-medium">{user?.name}</p>
-              <p className="text-xs text-muted-foreground">{user?.role}</p>
+              <p className="text-xs text-muted-foreground">{getDisplayRole()}</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={logout}>
@@ -28,29 +36,30 @@ export function MainLayout() {
       </header>
 
       <div className="flex-1 flex">
-        {/* Sidebar Placeholder */}
+        {/* Sidebar */}
         <aside className="w-64 border-r bg-muted/20 p-6 hidden md:block">
           <nav className="space-y-2">
             <h2 className="text-xs font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Navigation</h2>
-            <Link to="/">
-              <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-            </Link>
-            {user?.role === 'HR' && (
-              <Link to="/hr-dashboard">
-                <Button variant="ghost" className="w-full justify-start">HR Console</Button>
-              </Link>
-            )}
-            {user?.role === 'PROJECT_MANAGER' && (
-              <Link to="/pm-dashboard">
-                <Button variant="ghost" className="w-full justify-start">Manager Dashboard</Button>
-              </Link>
-            )}
-            {user?.role === 'EMPLOYEE' && (
+            
+            {/* Everyone who is an employee (which is everyone) gets My Performance */}
+            {hasRole('EMPLOYEE') && (
               <Link to="/employee-dashboard">
                 <Button variant="ghost" className="w-full justify-start">My Performance</Button>
               </Link>
             )}
-            {user?.role === 'BOSS' && (
+            
+            {/* Role-specific menus */}
+            {hasRole('HR') && (
+              <Link to="/hr-dashboard">
+                <Button variant="ghost" className="w-full justify-start">HR Console</Button>
+              </Link>
+            )}
+            {hasRole('PROJECT_MANAGER') && (
+              <Link to="/pm-dashboard">
+                <Button variant="ghost" className="w-full justify-start">Manager Dashboard</Button>
+              </Link>
+            )}
+            {hasRole('BOSS') && (
               <Link to="/boss-dashboard">
                 <Button variant="ghost" className="w-full justify-start">Executive Dashboard</Button>
               </Link>
