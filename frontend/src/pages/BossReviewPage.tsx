@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface FeedbackViewDto {
   pmRatingId: number;
@@ -49,6 +51,7 @@ export default function BossReviewPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [summary, setSummary] = useState<BossSummaryDto | null>(null);
+  const [bossComment, setBossComment] = useState('');
 
   useEffect(() => {
     fetchSummary();
@@ -64,8 +67,16 @@ export default function BossReviewPage() {
   };
 
   const handleFinalize = async () => {
+    if (!bossComment.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Comment Required",
+        description: "Please provide an overall review before finalizing.",
+      });
+      return;
+    }
     try {
-      await api.post(`/boss/close/${cycleId}`);
+      await api.post(`/boss/close/${cycleId}`, { bossComment });
       toast({
         title: "Appraisal Finalized",
         description: "The appraisal cycle has been closed successfully.",
@@ -106,16 +117,26 @@ export default function BossReviewPage() {
                     {summary.status === 'CLOSED' ? 'Appraisal Closed' : 'Finalize Appraisal'}
                 </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="max-w-lg">
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogTitle>Finalize Appraisal for {summary.employeeName}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will lock the appraisal cycle and notify HR. This action cannot be undone.
+                        Provide your overall review and feedback. This will be shared with the employee.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="bossComment" className="text-sm font-medium">Overall Review & Feedback</Label>
+                    <Textarea
+                        id="bossComment"
+                        placeholder="Enter your overall assessment, key strengths, areas for improvement, and any recommendations..."
+                        value={bossComment}
+                        onChange={(e) => setBossComment(e.target.value)}
+                        className="mt-2 min-h-[150px]"
+                    />
+                </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleFinalize}>Confirm Finalization</AlertDialogAction>
+                    <AlertDialogAction onClick={handleFinalize}>Submit & Finalize</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

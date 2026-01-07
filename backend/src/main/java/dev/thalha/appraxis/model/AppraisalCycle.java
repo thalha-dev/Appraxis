@@ -32,6 +32,9 @@ public class AppraisalCycle {
     @Column(nullable = false)
     private boolean selfAssessmentSubmitted = false;
 
+    @Column(columnDefinition = "TEXT")
+    private String bossComment;
+
     public AppraisalCycle() {
     }
 
@@ -97,5 +100,13 @@ public class AppraisalCycle {
 
     public void setSelfAssessmentSubmitted(boolean selfAssessmentSubmitted) {
         this.selfAssessmentSubmitted = selfAssessmentSubmitted;
+    }
+
+    public String getBossComment() {
+        return bossComment;
+    }
+
+    public void setBossComment(String bossComment) {
+        this.bossComment = bossComment;
     }
 }

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Award } from 'lucide-react';
 
 interface ReportData {
   questionText: string;
@@ -44,6 +45,7 @@ interface AppraisalCycleData {
   startDate: string;
   status: string;
   selfAssessmentSubmitted: boolean;
+  bossComment: string | null;
 }
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -295,6 +297,28 @@ export default function EmployeeDashboard() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Executive Review - Show when cycle is CLOSED and has boss comment */}
+      {selectedCycle && selectedCycle.status === 'CLOSED' && selectedCycle.bossComment && (
+        <Card className="border-l-4 border-l-primary bg-primary/5">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Award className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Executive Review</CardTitle>
+                <CardDescription>Final assessment from senior leadership</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <blockquote className="border-l-2 border-muted-foreground/20 pl-4 text-muted-foreground italic">
+              "{selectedCycle.bossComment}"
+            </blockquote>
+          </CardContent>
+        </Card>
+      )}
 
       {selectedCycle && (
       <Tabs defaultValue="visuals" className="space-y-4">

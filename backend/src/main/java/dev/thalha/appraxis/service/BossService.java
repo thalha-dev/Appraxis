@@ -45,7 +45,7 @@ public class BossService {
     }
 
     @Transactional
-    public void finalizeAppraisal(Long cycleId) {
+    public void finalizeAppraisal(Long cycleId, String bossComment) {
         AppraisalCycle cycle = appraisalRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Cycle not found"));
 
@@ -57,6 +57,7 @@ public class BossService {
             throw new RuntimeException("Appraisal is not ready for final review. Current status: " + cycle.getStatus());
         }
 
+        cycle.setBossComment(bossComment);
         cycle.setStatus(AppraisalStatus.CLOSED);
         appraisalRepository.save(cycle);
     }

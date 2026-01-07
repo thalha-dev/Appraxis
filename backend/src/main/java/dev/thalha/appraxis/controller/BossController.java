@@ -1,6 +1,7 @@
 package dev.thalha.appraxis.controller;
 
 import dev.thalha.appraxis.dto.BossSummaryDto;
+import dev.thalha.appraxis.dto.FinalizeAppraisalDto;
 import dev.thalha.appraxis.model.AppraisalCycle;
 import dev.thalha.appraxis.service.BossService;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +30,8 @@ public class BossController {
     }
 
     @PostMapping("/close/{cycleId}")
-    public ResponseEntity<Void> finalizeAppraisal(@PathVariable Long cycleId) {
-        bossService.finalizeAppraisal(cycleId);
+    public ResponseEntity<Void> finalizeAppraisal(@PathVariable Long cycleId, @RequestBody FinalizeAppraisalDto request) {
+        bossService.finalizeAppraisal(cycleId, request.getBossComment());
         return ResponseEntity.ok().build();
     }
 }
