@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface User {
   id: number;
@@ -25,6 +26,7 @@ interface AppraisalCycle {
 }
 
 export default function HrDashboard() {
+  const { toast } = useToast();
   const [employees, setEmployees] = useState<User[]>([]);
   const [appraisals, setAppraisals] = useState<AppraisalCycle[]>([]);
   const [pms, setPms] = useState<User[]>([]);
@@ -81,8 +83,17 @@ export default function HrDashboard() {
       fetchAppraisals(); // Refresh list
       // Reset form
       setSelectedEmployeeId('');
-    } catch (error) {
+      toast({
+        title: "Appraisal Initiated",
+        description: "The appraisal cycle has been created successfully.",
+      });
+    } catch (error: any) {
       console.error("Failed to initiate appraisal", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to Initiate",
+        description: error.response?.data?.message || error.response?.data || "Could not create appraisal.",
+      });
     }
   };
   
@@ -96,8 +107,17 @@ export default function HrDashboard() {
           fetchAppraisals();
           setSelectedPmId('');
           setSelectedCycleId(null);
-      } catch (error) {
+          toast({
+            title: "PM Assigned",
+            description: "The Project Manager has been assigned successfully.",
+          });
+      } catch (error: any) {
           console.error("Failed to assign PM", error);
+          toast({
+            variant: "destructive",
+            title: "Failed to Assign PM",
+            description: error.response?.data?.message || error.response?.data || "Could not assign PM.",
+          });
       }
   };
   

@@ -2,6 +2,7 @@ package dev.thalha.appraxis.service;
 
 import dev.thalha.appraxis.dto.PmRatingDto;
 import dev.thalha.appraxis.model.*;
+import dev.thalha.appraxis.repository.AppraisalRepository;
 import dev.thalha.appraxis.repository.PmRatingRepository;
 import dev.thalha.appraxis.repository.PmReviewRepository;
 import dev.thalha.appraxis.repository.QuestionRepository;
@@ -17,11 +18,14 @@ public class PmReviewService {
     private final PmReviewRepository pmReviewRepository;
     private final PmRatingRepository pmRatingRepository;
     private final QuestionRepository questionRepository;
+    private final AppraisalRepository appraisalRepository;
 
-    public PmReviewService(PmReviewRepository pmReviewRepository, PmRatingRepository pmRatingRepository, QuestionRepository questionRepository) {
+    public PmReviewService(PmReviewRepository pmReviewRepository, PmRatingRepository pmRatingRepository, 
+                           QuestionRepository questionRepository, AppraisalRepository appraisalRepository) {
         this.pmReviewRepository = pmReviewRepository;
         this.pmRatingRepository = pmRatingRepository;
         this.questionRepository = questionRepository;
+        this.appraisalRepository = appraisalRepository;
     }
 
     public List<PmReview> getPendingReviews(User reviewer) {
@@ -57,5 +61,10 @@ public class PmReviewService {
         review.setStatus(ReviewStatus.SUBMITTED);
         review.setFeedbackDate(LocalDateTime.now());
         pmReviewRepository.save(review);
+
+        // Update appraisal cycle status to PENDING_BOSS_REVIEW
+        AppraisalCycle cycle = review.getAppraisalCycle();
+        cycle.setStatus(AppraisalStatus.PENDING_BOSS_REVIEW);
+        appraisalRepository.save(cycle);
     }
 }

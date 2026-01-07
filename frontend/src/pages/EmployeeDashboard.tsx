@@ -7,6 +7,8 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ReportData {
   questionText: string;
@@ -36,42 +38,66 @@ interface FeedbackItem {
   existingClarification: string | null;
 }
 
+interface AppraisalCycleData {
+  id: number;
+  year: string;
+  startDate: string;
+  status: string;
+  selfAssessmentSubmitted: boolean;
+}
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 
 export default function EmployeeDashboard() {
   const { toast } = useToast();
-  const [activeCycle, setActiveCycle] = useState<any>(null);
+  const [allCycles, setAllCycles] = useState<AppraisalCycleData[]>([]);
+  const [selectedCycle, setSelectedCycle] = useState<AppraisalCycleData | null>(null);
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [submissions, setSubmissions] = useState<SelfRatingSubmission[]>([]);
   const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
   const [replyText, setReplyText] = useState<{[key: number]: string}>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchActiveCycle();
+    fetchAllCycles();
   }, []);
 
   useEffect(() => {
-    if (activeCycle) {
+    if (selectedCycle) {
       fetchReport();
       fetchQuestions();
       fetchFeedback();
     }
-  }, [activeCycle]);
+  }, [selectedCycle]);
 
-  const fetchActiveCycle = async () => {
+  const fetchAllCycles = async () => {
     try {
-      const response = await api.get('/employee/active-cycle');
-      setActiveCycle(response.data);
+      const response = await api.get('/employee/cycles');
+      const cycles = response.data;
+      setAllCycles(cycles);
+      // Auto-select the most recent cycle if available
+      if (cycles.length > 0) {
+        setSelectedCycle(cycles[0]);
+      }
     } catch (error) {
-      console.error("Failed to fetch active cycle", error);
+      console.error("Failed to fetch cycles", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCycleChange = (cycleId: string) => {
+    const cycle = allCycles.find(c => c.id.toString() === cycleId);
+    if (cycle) {
+      setSelectedCycle(cycle);
     }
   };
 
   const fetchReport = async () => {
     try {
-      const response = await api.get(`/employee/report/${activeCycle.id}`);
+      const response = await api.get(`/employee/report/${selectedCycle!.id}`);
       setReportData(response.data);
     } catch (error) {
       console.error("Failed to fetch report", error);
@@ -80,7 +106,7 @@ export default function EmployeeDashboard() {
   
   const fetchFeedback = async () => {
       try {
-          const response = await api.get(`/employee/feedback/${activeCycle.id}`);
+          const response = await api.get(`/employee/feedback/${selectedCycle!.id}`);
           setFeedbackList(response.data);
       } catch (error) {
           console.error("Failed to fetch feedback", error);
@@ -116,20 +142,21 @@ export default function EmployeeDashboard() {
   };
 
   const handleSubmitAssessment = async () => {
-    if (!activeCycle) return;
+    if (!selectedCycle) return;
     try {
-      await api.post(`/employee/self-assessment/${activeCycle.id}`, submissions);
+      await api.post(`/employee/self-assessment/${selectedCycle.id}`, submissions);
       toast({
         title: "Assessment Submitted",
         description: "Your self-assessment has been saved.",
       });
       fetchReport(); // Refresh graphs
-    } catch (error) {
+      fetchAllCycles(); // Refresh cycles to update selfAssessmentSubmitted flag
+    } catch (error: any) {
       console.error("Failed to submit assessment", error);
       toast({
         variant: "destructive",
         title: "Submission Failed",
-        description: "Please try again later.",
+        description: error.response?.data?.message || "Please try again later.",
       });
     }
   };
@@ -159,16 +186,34 @@ export default function EmployeeDashboard() {
       }
   };
 
-  if (!activeCycle) {
-      return (
-          <div className="flex items-center justify-center h-full pt-10">
-              <Card>
-                  <CardContent className="pt-6">
-                      <p className="text-muted-foreground">No active appraisal cycle found for the current year.</p>
-                  </CardContent>
-              </Card>
-          </div>
-      )
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'OPEN': return 'bg-blue-500';
+      case 'PENDING_PM_REVIEW': return 'bg-yellow-500';
+      case 'PENDING_BOSS_REVIEW': return 'bg-orange-500';
+      case 'CLOSED': return 'bg-gray-500';
+      default: return 'bg-blue-500';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full pt-10">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (allCycles.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full pt-10">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">No appraisal cycles found. Your HR team will initiate your appraisal cycle.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Transform data for charts
@@ -181,17 +226,81 @@ export default function EmployeeDashboard() {
       Self: d.selfRating || 0
   }));
 
+  // Show self assessment tab only if cycle is not closed AND self-assessment hasn't been submitted yet
+  const canSubmitSelfAssessment = selectedCycle && 
+    selectedCycle.status !== 'CLOSED' && 
+    !selectedCycle.selfAssessmentSubmitted;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">My Performance Overview</h2>
-        <div className="text-sm text-muted-foreground">Cycle: {activeCycle.year}</div>
+        <div className="flex items-center gap-4">
+          <Select value={selectedCycle?.id.toString()} onValueChange={handleCycleChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select cycle" />
+            </SelectTrigger>
+            <SelectContent>
+              {allCycles.map(cycle => (
+                <SelectItem key={cycle.id} value={cycle.id.toString()}>
+                  {cycle.year} - <span className="text-muted-foreground">{cycle.status.replace(/_/g, ' ')}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Badge className={`${getStatusColor(selectedCycle?.status || '')} text-white`}>
+            {selectedCycle?.status.replace(/_/g, ' ')}
+          </Badge>
+        </div>
       </div>
 
+      {/* All Cycles Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Appraisal History</CardTitle>
+          <CardDescription>All your past and ongoing appraisal cycles</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Year</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {allCycles.map(cycle => (
+                <TableRow key={cycle.id} className={selectedCycle?.id === cycle.id ? 'bg-muted/50' : ''}>
+                  <TableCell className="font-medium">{cycle.year}</TableCell>
+                  <TableCell>{cycle.startDate}</TableCell>
+                  <TableCell>
+                    <Badge className={`${getStatusColor(cycle.status)} text-white`}>
+                      {cycle.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant={selectedCycle?.id === cycle.id ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => handleCycleChange(cycle.id.toString())}
+                    >
+                      {selectedCycle?.id === cycle.id ? 'Viewing' : 'View Details'}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {selectedCycle && (
       <Tabs defaultValue="visuals" className="space-y-4">
         <TabsList>
           <TabsTrigger value="visuals">Visual Insights</TabsTrigger>
-          <TabsTrigger value="assessment">Self Assessment</TabsTrigger>
+          {canSubmitSelfAssessment && <TabsTrigger value="assessment">Self Assessment</TabsTrigger>}
           <TabsTrigger value="feedback">Feedback & Replies</TabsTrigger>
         </TabsList>
         
@@ -338,6 +447,7 @@ export default function EmployeeDashboard() {
             </Card>
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }

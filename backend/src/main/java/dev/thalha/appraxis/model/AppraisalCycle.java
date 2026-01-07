@@ -29,6 +29,9 @@ public class AppraisalCycle {
     @Column(nullable = false)
     private String year;
 
+    @Column(nullable = false)
+    private boolean selfAssessmentSubmitted = false;
+
     public AppraisalCycle() {
     }
 
@@ -86,5 +89,13 @@ public class AppraisalCycle {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    public boolean isSelfAssessmentSubmitted() {
+        return selfAssessmentSubmitted;
+    }
+
+    public void setSelfAssessmentSubmitted(boolean selfAssessmentSubmitted) {
+        this.selfAssessmentSubmitted = selfAssessmentSubmitted;
     }
 }

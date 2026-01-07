@@ -45,6 +45,11 @@ public class AppraisalService {
             throw new RuntimeException("Can only initiate appraisal for employees");
         }
 
+        // Check for existing appraisal for same employee and year
+        if (appraisalRepository.findByEmployeeAndYear(employee, year).isPresent()) {
+            throw new RuntimeException("An appraisal for this employee already exists for year " + year);
+        }
+
         AppraisalCycle appraisal = new AppraisalCycle();
         appraisal.setEmployee(employee);
         appraisal.setHrInitiator(initiator);
@@ -58,6 +63,11 @@ public class AppraisalService {
     public void assignPm(Long cycleId, Long pmId) {
         AppraisalCycle cycle = appraisalRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Appraisal cycle not found"));
+
+        // Check if appraisal is in correct status
+        if (cycle.getStatus() != AppraisalStatus.OPEN) {
+            throw new RuntimeException("Cannot assign PM. Appraisal is not in OPEN status.");
+        }
         
         User pm = userRepository.findById(pmId)
                 .orElseThrow(() -> new RuntimeException("PM not found"));

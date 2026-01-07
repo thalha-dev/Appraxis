@@ -45,6 +45,10 @@ public class EmployeeService {
                 .orElse(null);
     }
 
+    public List<AppraisalCycle> getAllCycles(User employee) {
+        return appraisalRepository.findByEmployeeOrderByYearDesc(employee);
+    }
+
     public List<ReportDto> getReport(Long cycleId) {
         AppraisalCycle cycle = appraisalRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Cycle not found"));
@@ -89,9 +93,24 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void submitSelfAssessment(Long cycleId, List<RatingSubmissionDto> submissions) {
+    public void submitSelfAssessment(Long cycleId, List<RatingSubmissionDto> submissions, User employee) {
         AppraisalCycle cycle = appraisalRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Cycle not found"));
+
+        // Validate ownership
+        if (!cycle.getEmployee().getId().equals(employee.getId())) {
+            throw new RuntimeException("You are not authorized to submit self-assessment for this cycle");
+        }
+
+        // Check if already submitted
+        if (cycle.isSelfAssessmentSubmitted()) {
+            throw new RuntimeException("Self assessment already submitted for this cycle");
+        }
+
+        // Check if cycle is in valid status
+        if (cycle.getStatus() == AppraisalStatus.CLOSED) {
+            throw new RuntimeException("Cannot submit self-assessment for a closed appraisal");
+        }
 
         for (RatingSubmissionDto dto : submissions) {
             Question question = questionRepository.findById(dto.getQuestionId())
@@ -105,6 +124,10 @@ public class EmployeeService {
 
             selfAssessmentRepository.save(assessment);
         }
+
+        // Mark self-assessment as submitted
+        cycle.setSelfAssessmentSubmitted(true);
+        appraisalRepository.save(cycle);
     }
     public List<FeedbackViewDto> getFeedback(Long cycleId) {
         AppraisalCycle cycle = appraisalRepository.findById(cycleId)

@@ -23,7 +23,7 @@ public class BossService {
 
     public List<AppraisalCycle> getPendingReviews() {
         return appraisalRepository.findAll().stream()
-                .filter(a -> a.getStatus() != AppraisalStatus.CLOSED) // Boss can review anything technically, but mainly interested in moving things to closed.
+                .filter(a -> a.getStatus() == AppraisalStatus.PENDING_BOSS_REVIEW)
                 .toList(); 
     }
 
@@ -48,6 +48,14 @@ public class BossService {
     public void finalizeAppraisal(Long cycleId) {
         AppraisalCycle cycle = appraisalRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Cycle not found"));
+
+        if (cycle.getStatus() == AppraisalStatus.CLOSED) {
+            throw new RuntimeException("Appraisal is already closed");
+        }
+
+        if (cycle.getStatus() != AppraisalStatus.PENDING_BOSS_REVIEW) {
+            throw new RuntimeException("Appraisal is not ready for final review. Current status: " + cycle.getStatus());
+        }
 
         cycle.setStatus(AppraisalStatus.CLOSED);
         appraisalRepository.save(cycle);

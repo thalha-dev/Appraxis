@@ -28,6 +28,11 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getActiveCycle(employee));
     }
 
+    @GetMapping("/cycles")
+    public ResponseEntity<List<AppraisalCycle>> getAllCycles(@AuthenticationPrincipal User employee) {
+        return ResponseEntity.ok(employeeService.getAllCycles(employee));
+    }
+
     @GetMapping("/report/{cycleId}")
     public ResponseEntity<List<ReportDto>> getReport(@PathVariable Long cycleId) {
         return ResponseEntity.ok(employeeService.getReport(cycleId));
@@ -39,8 +44,8 @@ public class EmployeeController {
     }
 
     @PostMapping("/self-assessment/{cycleId}")
-    public ResponseEntity<Void> submitSelfAssessment(@PathVariable Long cycleId, @RequestBody List<RatingSubmissionDto> submissions) {
-        employeeService.submitSelfAssessment(cycleId, submissions);
+    public ResponseEntity<Void> submitSelfAssessment(@PathVariable Long cycleId, @RequestBody List<RatingSubmissionDto> submissions, @AuthenticationPrincipal User employee) {
+        employeeService.submitSelfAssessment(cycleId, submissions, employee);
         return ResponseEntity.ok().build();
     }
     
