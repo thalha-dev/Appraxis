@@ -61,6 +61,7 @@ export default function EmployeeDashboard() {
   const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
   const [replyText, setReplyText] = useState<{[key: number]: string}>({});
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('visuals');
 
   useEffect(() => {
     fetchAllCycles();
@@ -79,9 +80,17 @@ export default function EmployeeDashboard() {
       const response = await api.get('/employee/cycles');
       const cycles = response.data;
       setAllCycles(cycles);
-      // Auto-select the most recent cycle if available
+      // Auto-select the most recent cycle if available, or update the currently selected one
       if (cycles.length > 0) {
-        setSelectedCycle(cycles[0]);
+        if (selectedCycle) {
+          // Update the selected cycle with fresh data
+          const updatedCycle = cycles.find((c: AppraisalCycleData) => c.id === selectedCycle.id);
+          if (updatedCycle) {
+            setSelectedCycle(updatedCycle);
+          }
+        } else {
+          setSelectedCycle(cycles[0]);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch cycles", error);
@@ -151,6 +160,7 @@ export default function EmployeeDashboard() {
         title: "Assessment Submitted",
         description: "Your self-assessment has been saved.",
       });
+      setActiveTab('visuals'); // Switch to visuals tab after submission
       fetchReport(); // Refresh graphs
       fetchAllCycles(); // Refresh cycles to update selfAssessmentSubmitted flag
     } catch (error: any) {
@@ -321,7 +331,7 @@ export default function EmployeeDashboard() {
       )}
 
       {selectedCycle && (
-      <Tabs defaultValue="visuals" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="visuals">Visual Insights</TabsTrigger>
           {canSubmitSelfAssessment && <TabsTrigger value="assessment">Self Assessment</TabsTrigger>}
