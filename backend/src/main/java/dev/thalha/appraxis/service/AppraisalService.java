@@ -14,16 +14,23 @@ import java.util.List;
 @Service
 public class AppraisalService {
 
+
     private final AppraisalRepository appraisalRepository;
     private final UserRepository userRepository;
+    private final dev.thalha.appraxis.repository.PmReviewRepository pmReviewRepository;
 
-    public AppraisalService(AppraisalRepository appraisalRepository, UserRepository userRepository) {
+    public AppraisalService(AppraisalRepository appraisalRepository, UserRepository userRepository, dev.thalha.appraxis.repository.PmReviewRepository pmReviewRepository) {
         this.appraisalRepository = appraisalRepository;
         this.userRepository = userRepository;
+        this.pmReviewRepository = pmReviewRepository;
     }
 
     public List<User> getAllEmployees() {
         return userRepository.findByRole(Role.EMPLOYEE);
+    }
+    
+    public List<User> getAllPms() {
+        return userRepository.findByRole(Role.PROJECT_MANAGER);
     }
 
     public List<AppraisalCycle> getAllAppraisals() {
@@ -46,5 +53,28 @@ public class AppraisalService {
         appraisal.setYear(year);
 
         return appraisalRepository.save(appraisal);
+    }
+    
+    public void assignPm(Long cycleId, Long pmId) {
+        AppraisalCycle cycle = appraisalRepository.findById(cycleId)
+                .orElseThrow(() -> new RuntimeException("Appraisal cycle not found"));
+        
+        User pm = userRepository.findById(pmId)
+                .orElseThrow(() -> new RuntimeException("PM not found"));
+                
+        if (pm.getRole() != Role.PROJECT_MANAGER) {
+            throw new RuntimeException("Selected user is not a Project Manager");
+        }
+        
+        dev.thalha.appraxis.model.PmReview review = new dev.thalha.appraxis.model.PmReview();
+        review.setAppraisalCycle(cycle);
+        review.setReviewer(pm);
+        review.setStatus(dev.thalha.appraxis.model.ReviewStatus.PENDING);
+        
+        pmReviewRepository.save(review);
+        
+        // Update cycle status
+        cycle.setStatus(AppraisalStatus.PENDING_PM_REVIEW);
+        appraisalRepository.save(cycle);
     }
 }

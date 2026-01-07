@@ -27,12 +27,19 @@ interface AppraisalCycle {
 export default function HrDashboard() {
   const [employees, setEmployees] = useState<User[]>([]);
   const [appraisals, setAppraisals] = useState<AppraisalCycle[]>([]);
+  const [pms, setPms] = useState<User[]>([]);
+  
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [year, setYear] = useState<string>(new Date().getFullYear().toString());
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPmDialogOpen, setIsPmDialogOpen] = useState(false);
+  const [selectedCycleId, setSelectedCycleId] = useState<number | null>(null);
+  const [selectedPmId, setSelectedPmId] = useState<string>('');
 
   useEffect(() => {
     fetchEmployees();
+    fetchPms();
     fetchAppraisals();
   }, []);
 
@@ -42,6 +49,15 @@ export default function HrDashboard() {
       setEmployees(response.data);
     } catch (error) {
       console.error("Failed to fetch employees", error);
+    }
+  };
+  
+  const fetchPms = async () => {
+    try {
+      const response = await api.get('/users/pms');
+      setPms(response.data);
+    } catch (error) {
+      console.error("Failed to fetch PMs", error);
     }
   };
 
@@ -68,6 +84,26 @@ export default function HrDashboard() {
     } catch (error) {
       console.error("Failed to initiate appraisal", error);
     }
+  };
+  
+  const handleAssignPm = async () => {
+      if (!selectedCycleId || !selectedPmId) return;
+      try {
+          await api.post(`/appraisals/${selectedCycleId}/assign-pm`, {
+              pmId: parseInt(selectedPmId)
+          });
+          setIsPmDialogOpen(false);
+          fetchAppraisals();
+          setSelectedPmId('');
+          setSelectedCycleId(null);
+      } catch (error) {
+          console.error("Failed to assign PM", error);
+      }
+  };
+  
+  const openAssignPmDialog = (cycleId: number) => {
+      setSelectedCycleId(cycleId);
+      setIsPmDialogOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -180,7 +216,9 @@ export default function HrDashboard() {
                         </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                        <Button variant="outline" size="sm">View</Button>
+                            {appraisal.status === 'OPEN' && (
+                                <Button size="sm" variant="outline" onClick={() => openAssignPmDialog(appraisal.id)}>Assign PM</Button>
+                            )}
                         </TableCell>
                     </TableRow>
                     ))
@@ -190,6 +228,37 @@ export default function HrDashboard() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Assign PM Dialog */}
+      <Dialog open={isPmDialogOpen} onOpenChange={setIsPmDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+            <DialogTitle>Assign Project Manager</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="pm" className="text-right">
+                Manager
+            </Label>
+            <Select onValueChange={setSelectedPmId} value={selectedPmId}>
+                <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select Project Manager" />
+                </SelectTrigger>
+                <SelectContent>
+                {pms.map(pm => (
+                    <SelectItem key={pm.id} value={pm.id.toString()}>
+                    {pm.name}
+                    </SelectItem>
+                ))}
+                </SelectContent>
+            </Select>
+            </div>
+        </div>
+        <DialogFooter>
+            <Button onClick={handleAssignPm}>Assign</Button>
+        </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

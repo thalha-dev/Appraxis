@@ -40,4 +40,15 @@ public class AppraisalController {
         
         return ResponseEntity.ok(appraisalService.initiateAppraisal(employeeId, year, initiator));
     }
+    @GetMapping("/users/pms")
+    public ResponseEntity<List<User>> getPms() {
+        return ResponseEntity.ok(appraisalService.getAllPms());
+    }
+
+    @PostMapping("/appraisals/{cycleId}/assign-pm")
+    public ResponseEntity<Void> assignPm(@PathVariable Long cycleId, @RequestBody Map<String, Long> payload) {
+        Long pmId = payload.get("pmId");
+        appraisalService.assignPm(cycleId, pmId);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -40,6 +40,11 @@ export function MainLayout() {
                 <Button variant="ghost" className="w-full justify-start">HR Console</Button>
               </Link>
             )}
+            {user?.role === 'PROJECT_MANAGER' && (
+              <Link to="/pm-dashboard">
+                <Button variant="ghost" className="w-full justify-start">Manager Dashboard</Button>
+              </Link>
+            )}
           </nav>
         </aside>
 
