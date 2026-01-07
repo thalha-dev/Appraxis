@@ -27,12 +27,26 @@ interface SelfRatingSubmission {
   comment: string;
 }
 
+interface FeedbackItem {
+  pmRatingId: number;
+  questionText: string;
+  pmName: string;
+  rating: number;
+  comment: string;
+  existingClarification: string | null;
+}
+
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+
 export default function EmployeeDashboard() {
   const { toast } = useToast();
   const [activeCycle, setActiveCycle] = useState<any>(null);
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [submissions, setSubmissions] = useState<SelfRatingSubmission[]>([]);
+  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
+  const [replyText, setReplyText] = useState<{[key: number]: string}>({});
 
   useEffect(() => {
     fetchActiveCycle();
@@ -42,6 +56,7 @@ export default function EmployeeDashboard() {
     if (activeCycle) {
       fetchReport();
       fetchQuestions();
+      fetchFeedback();
     }
   }, [activeCycle]);
 
@@ -61,6 +76,15 @@ export default function EmployeeDashboard() {
     } catch (error) {
       console.error("Failed to fetch report", error);
     }
+  };
+  
+  const fetchFeedback = async () => {
+      try {
+          const response = await api.get(`/employee/feedback/${activeCycle.id}`);
+          setFeedbackList(response.data);
+      } catch (error) {
+          console.error("Failed to fetch feedback", error);
+      }
   };
 
   const fetchQuestions = async () => {
@@ -109,6 +133,31 @@ export default function EmployeeDashboard() {
       });
     }
   };
+  
+  const handleReplyChange = (id: number, text: string) => {
+      setReplyText(prev => ({...prev, [id]: text}));
+  };
+  
+  const submitReply = async (pmRatingId: number) => {
+      try {
+          await api.post('/employee/clarify', {
+              pmRatingId,
+              replyText: replyText[pmRatingId]
+          });
+          toast({
+              title: "Reply Sent",
+              description: "Your clarification has been submitted.",
+          });
+          fetchFeedback(); // Refresh list
+      } catch (error) {
+          console.error("Failed to submit reply", error);
+           toast({
+              variant: "destructive",
+              title: "Submission Failed",
+              description: "Please try again later.",
+          });
+      }
+  };
 
   if (!activeCycle) {
       return (
@@ -143,6 +192,7 @@ export default function EmployeeDashboard() {
         <TabsList>
           <TabsTrigger value="visuals">Visual Insights</TabsTrigger>
           <TabsTrigger value="assessment">Self Assessment</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback & Replies</TabsTrigger>
         </TabsList>
         
         <TabsContent value="visuals" className="space-y-4">
@@ -235,6 +285,57 @@ export default function EmployeeDashboard() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="feedback">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Manager Feedback & Clarifications</CardTitle>
+                    <CardDescription>Review comments and provide additional context if needed.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                        {feedbackList.map((item) => (
+                            <AccordionItem value={item.pmRatingId.toString()} key={item.pmRatingId}>
+                                <AccordionTrigger className="hover:no-underline">
+                                    <div className="flex items-center justify-between w-full pr-4 text-left">
+                                        <span className="font-medium">{item.questionText}</span>
+                                        <Badge variant="outline" className="ml-2 whitespace-nowrap">
+                                            Role: {item.rating}/10 by {item.pmName}
+                                        </Badge>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-4 px-1">
+                                    <div className="bg-muted p-4 rounded-md">
+                                        <p className="text-sm font-semibold mb-1">Manager's Comment:</p>
+                                        <p className="italic text-muted-foreground">"{item.comment}"</p>
+                                    </div>
+                                    
+                                    {item.existingClarification ? (
+                                        <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md border border-blue-100 dark:border-blue-900">
+                                            <p className="text-sm font-semibold mb-1 text-blue-700 dark:text-blue-300">Your Reply:</p>
+                                            <p className="text-blue-600 dark:text-blue-400">{item.existingClarification}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Reply / Clarification</label>
+                                            <Textarea 
+                                                placeholder="Write your reply handling objection or providing context..." 
+                                                value={replyText[item.pmRatingId] || ''}
+                                                onChange={(e) => handleReplyChange(item.pmRatingId, e.target.value)}
+                                            />
+                                            <Button size="sm" onClick={() => submitReply(item.pmRatingId)}>Send Reply</Button>
+                                        </div>
+                                    )}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                    {feedbackList.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">No specific feedback comments available to review yet.</p>
+                    )}
+                </CardContent>
+            </Card>
         </TabsContent>
       </Tabs>
     </div>

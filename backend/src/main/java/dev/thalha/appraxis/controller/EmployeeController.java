@@ -1,5 +1,7 @@
 package dev.thalha.appraxis.controller;
 
+import dev.thalha.appraxis.dto.ClarificationRequestDto;
+import dev.thalha.appraxis.dto.FeedbackViewDto;
 import dev.thalha.appraxis.dto.RatingSubmissionDto;
 import dev.thalha.appraxis.dto.ReportDto;
 import dev.thalha.appraxis.model.AppraisalCycle;
@@ -30,10 +32,21 @@ public class EmployeeController {
     public ResponseEntity<List<ReportDto>> getReport(@PathVariable Long cycleId) {
         return ResponseEntity.ok(employeeService.getReport(cycleId));
     }
+    
+    @GetMapping("/feedback/{cycleId}")
+    public ResponseEntity<List<FeedbackViewDto>> getFeedback(@PathVariable Long cycleId) {
+        return ResponseEntity.ok(employeeService.getFeedback(cycleId));
+    }
 
     @PostMapping("/self-assessment/{cycleId}")
     public ResponseEntity<Void> submitSelfAssessment(@PathVariable Long cycleId, @RequestBody List<RatingSubmissionDto> submissions) {
         employeeService.submitSelfAssessment(cycleId, submissions);
+        return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/clarify")
+    public ResponseEntity<Void> submitClarification(@RequestBody ClarificationRequestDto request) {
+        employeeService.submitClarification(request);
         return ResponseEntity.ok().build();
     }
 }

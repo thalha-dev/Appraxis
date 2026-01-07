@@ -50,6 +50,11 @@ export function MainLayout() {
                 <Button variant="ghost" className="w-full justify-start">My Performance</Button>
               </Link>
             )}
+            {user?.role === 'BOSS' && (
+              <Link to="/boss-dashboard">
+                <Button variant="ghost" className="w-full justify-start">Executive Dashboard</Button>
+              </Link>
+            )}
           </nav>
         </aside>
 

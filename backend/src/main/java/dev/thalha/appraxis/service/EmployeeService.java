@@ -1,5 +1,7 @@
 package dev.thalha.appraxis.service;
 
+import dev.thalha.appraxis.dto.ClarificationRequestDto;
+import dev.thalha.appraxis.dto.FeedbackViewDto;
 import dev.thalha.appraxis.dto.RatingSubmissionDto;
 import dev.thalha.appraxis.dto.ReportDto;
 import dev.thalha.appraxis.model.*;
@@ -21,17 +23,20 @@ public class EmployeeService {
     private final PmRatingRepository pmRatingRepository;
     private final SelfAssessmentRepository selfAssessmentRepository;
     private final QuestionRepository questionRepository;
+    private final ClarificationRepository clarificationRepository;
 
     public EmployeeService(AppraisalRepository appraisalRepository, 
                            PmReviewRepository pmReviewRepository, 
                            PmRatingRepository pmRatingRepository, 
                            SelfAssessmentRepository selfAssessmentRepository, 
-                           QuestionRepository questionRepository) {
+                           QuestionRepository questionRepository,
+                           ClarificationRepository clarificationRepository) {
         this.appraisalRepository = appraisalRepository;
         this.pmReviewRepository = pmReviewRepository;
         this.pmRatingRepository = pmRatingRepository;
         this.selfAssessmentRepository = selfAssessmentRepository;
         this.questionRepository = questionRepository;
+        this.clarificationRepository = clarificationRepository;
     }
 
     public AppraisalCycle getActiveCycle(User employee) {
@@ -100,5 +105,55 @@ public class EmployeeService {
 
             selfAssessmentRepository.save(assessment);
         }
+    }
+    public List<FeedbackViewDto> getFeedback(Long cycleId) {
+        AppraisalCycle cycle = appraisalRepository.findById(cycleId)
+                .orElseThrow(() -> new RuntimeException("Cycle not found"));
+
+        List<PmReview> reviews = pmReviewRepository.findAll().stream()
+                .filter(r -> r.getAppraisalCycle().getId().equals(cycleId) && r.getStatus() == ReviewStatus.SUBMITTED)
+                .toList();
+
+        List<FeedbackViewDto> feedbacks = new ArrayList<>();
+
+        for (PmReview review : reviews) {
+            List<PmRating> ratings = pmRatingRepository.findAll().stream()
+                    .filter(r -> r.getPmReview().getId().equals(review.getId()))
+                    .toList();
+
+            for (PmRating rating : ratings) {
+                if (rating.getComment() != null && !rating.getComment().isEmpty()) {
+                    String clarification = clarificationRepository.findByPmRating(rating)
+                            .map(Clarification::getEmployeeReply)
+                            .orElse(null);
+
+                    feedbacks.add(new FeedbackViewDto(
+                            rating.getId(),
+                            rating.getQuestion().getText(),
+                            review.getReviewer().getName(),
+                            rating.getRating(),
+                            rating.getComment(),
+                            clarification
+                    ));
+                }
+            }
+        }
+        return feedbacks;
+    }
+
+    @Transactional
+    public void submitClarification(ClarificationRequestDto request) {
+        PmRating rating = pmRatingRepository.findById(request.getPmRatingId())
+                .orElseThrow(() -> new RuntimeException("Rating not found"));
+
+        if (clarificationRepository.findByPmRating(rating).isPresent()) {
+            throw new RuntimeException("Clarification already submitted");
+        }
+
+        Clarification clarification = new Clarification();
+        clarification.setPmRating(rating);
+        clarification.setEmployeeReply(request.getReplyText());
+        
+        clarificationRepository.save(clarification);
     }
 }

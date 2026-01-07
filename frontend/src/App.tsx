@@ -8,6 +8,8 @@ import HrDashboard from './pages/HrDashboard';
 import PmDashboard from './pages/PmDashboard';
 import ReviewForm from './pages/ReviewForm';
 import EmployeeDashboard from './pages/EmployeeDashboard';
+import BossDashboard from './pages/BossDashboard';
+import BossReviewPage from './pages/BossReviewPage';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
               <Route path="/pm-dashboard" element={<PmDashboard />} />
               <Route path="/pm/reviews/:reviewId" element={<ReviewForm />} />
               <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
+              <Route path="/boss-dashboard" element={<BossDashboard />} />
+              <Route path="/boss/review/:cycleId" element={<BossReviewPage />} />
             </Route>
           </Route>
         </Routes>
